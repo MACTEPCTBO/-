@@ -19,7 +19,8 @@ class Connect:
 
                 print(data)
                 await cls.Send(client,data)
-        except:
+        except Exception as e:
+            await websocket.ping()
             print("Disconnect")
             await client.close()
 
