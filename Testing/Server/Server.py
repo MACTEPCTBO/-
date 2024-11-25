@@ -1,50 +1,31 @@
-import asyncio
 import json
-import websockets
+
+from DataBase.DataBase import Connector
+from flask import Flask
+
+from Testing.Server.Analiz import Analiz
+
+app = Flask(__name__)
 
 
-from Connector import Connector
-from websockets import ConnectionClosedError, ConnectionClosed
+@app.route('/connect/<GROUP>/<NAME>/')
+def Connect(GROUP:int ,NAME):
+    if not (Connector.Select_User("count(*)",f" WHERE Name = '{NAME}'")):
+        Connector.Insert_User(GROUP,NAME)
+
+    return Analiz.Qustions(GROUP,NAME)
 
 
-class Connect:
+@app.route('/send/<GROUP>/<NAME>/<RESULT>/')
+def Send(GROUP: int, NAME, RESULT):
+    print('Результат анализа')
+    RESULT = json.loads(RESULT)
 
-    @classmethod
-    async def Connect(cls, client):
-        await cls.Recv(client)
-
-
-
-    @classmethod
-    async def Recv(cls, client):
-        print(f'Connect: user')
-        try:
-            while True:
-                data = await client.recv()
-                data = json.loads(data)
-
-                if data:
-                    data = await Connector.OpenFile(data)
-                await cls.Send(client,data)
+    for i, res in enumerate(Analiz.result_user):
+        if res[0] == GROUP and res[1] == NAME:
+            print(res[2], RESULT)
+            return json.dumps(Analiz.Estimation(res[2], RESULT))
 
 
-        except ConnectionClosedError as e:
-            print("Error: " + str(e))
-            await client.close()
-        except ConnectionClosed as e:
-            print("Disconnect: ")
-            await client.close()
-
-    @classmethod
-    async def Send(cls, client, data):
-        data = json.dumps(data)
-        await client.send(data)
-
-
-async def main():
-    async with websockets.serve(Connect.Connect,'127.0.0.1',3000):
-        await asyncio.Future()
-
-
-if __name__ == '__main__':
-    asyncio.run(main())
+if __name__ == "__main__":
+    app.run()

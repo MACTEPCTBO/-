@@ -1,43 +1,23 @@
-import asyncio
 import json
-
-import websockets
-import threading
+import requests
 
 
-class Client:
-    data = []
-    def __init__(self, Ip: str, Port: int):
-        self.IP = Ip
-        self.Port = Port
+def Connect(data: str):
+    reasponse = requests.get(data)
 
-        self.data = '1'
+    data = json.loads(reasponse.text)
+    return data
 
 
-    async def Connect(self):
-        async with websockets.connect(f'ws://{self.IP}:{self.Port}') as self.client:
-            await self.Send(('42215'))
-            await self.Recv()
+def Send(data: tuple):
+    data = json.dumps(data)
+    reasponse = requests.get(f'http://127.0.0.1:5000/send/42215/egor/{data}')
 
-            await self.client.close()
+    print(reasponse.status_code)
 
+    return json.dumps(reasponse.text)
 
-
-
-    async def Send(self, data: tuple):
-        data = json.dumps(data)
-        print(data)
-        await self.client.send(data)
-
-
-    async def Recv(self) -> list:
-        data = await self.client.recv()
-        data = json.loads(data)
-        print("RECV " + str(data))
-
-        self.data = data
 
 
 if __name__ == '__main__':
-    c = Client('127.0.0.1',3000)
-    asyncio.run(c.Connect())
+    Connect('http://127.0.0.1:5000/connect/42215/egor/')

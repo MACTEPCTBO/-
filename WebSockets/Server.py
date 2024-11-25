@@ -1,4 +1,6 @@
 import asyncio
+import logging
+
 import websockets
 
 
@@ -29,7 +31,7 @@ class Connect:
 
 
 async def main():
-    async with websockets.serve(Connect.Connect,'127.0.0.1',3000):
+    async with websockets.serve(Connect.Connect,'127.0.0.1',3000, ping_interval=60, ping_timeout=180,logger=logging.getLogger("websockets.client")):
         await asyncio.Future()
 
 
